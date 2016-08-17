@@ -71,8 +71,43 @@ class Server(object):
         print('Peer %s quit!\n' % (peer.name))
 
     def forward(self, message):
-        print('in clients before forward')
-        self.broadcast(message)
+        print('in clients before forward : ', message)
+        tokens = message.decode(ENCODING).split('|')
+
+        if len(tokens) < 2:
+            return
+        
+        sequence_number = bytearray(tokens[0],ENCODING)
+        event_type = tokens[1]
+
+        if event_type == 'B':
+            self.broadcast(sequence_number)
+            return
+
+        if len(tokens) < 3:
+            return
+
+        from_user_id = int(tokens[2])
+
+        if event_type == 'S':
+            pass # 아직 구현전
+        
+        if len(tokens) < 4:
+            return
+
+        to_user_id = int(tokens[3])
+
+        if event_type == 'P':
+            self.private_message(to_user_id, sequence_number)
+            return
+
+
+        
+    def private_message(self, id, message):
+        print('print message [%s] : %s' % (str(id), message.decode(ENCODING)))
+        peers = [ p for p, i in self._clients.items() if i == id ]
+        if len(peers) > 0:
+            peers[0].send(message)
 
     def broadcast(self, message):
         print('in clients in broadcast')
