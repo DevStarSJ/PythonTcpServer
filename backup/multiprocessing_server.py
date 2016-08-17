@@ -6,7 +6,6 @@ import sys
 HOST = 'localhost'
 PORT_SOURCE = 9090
 PORT_CLIENT = 9099
-
 ENCODING = 'utf-8'
 
 list_server = []

@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{0ab131a8-74a1-4a78-8a8d-e5617bc07ea5}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>chat_server.py</StartupFile>
+    <StartupFile>double_chat_server.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -21,8 +21,32 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="01.chat_server\chat_client.py" />
+    <Compile Include="01.chat_server\chat_server.py" />
+    <Compile Include="02.double_chat_server\chat_client.py" />
+    <Compile Include="02.double_chat_server\chat_server.py" />
+    <Compile Include="02.double_chat_server\double_chat_server.py" />
+    <Compile Include="backup\audience_server.py" />
+    <Compile Include="backup\audience_tcp_handler.py" />
     <Compile Include="chat_client.py" />
     <Compile Include="chat_server.py" />
+    <Compile Include="double_chat_server.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="backup\multiprocessing_server.py" />
+    <Compile Include="backup\tcp_async_server.py" />
+    <Compile Include="backup\tcp_async_server_not_working_style2.py" />
+    <Compile Include="backup\tcp_chat_client.py" />
+    <Compile Include="backup\tcp_client.py" />
+    <Compile Include="backup\tcp_client_audience.py" />
+    <Compile Include="backup\tcp_echo_async_server.py" />
+    <Compile Include="backup\tcp_server.py" />
+    <Compile Include="backup\tcp_source.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="01.chat_server\" />
+    <Folder Include="02.double_chat_server\" />
+    <Folder Include="backup\" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
