@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{0ab131a8-74a1-4a78-8a8d-e5617bc07ea5}</ProjectGuid>
     <ProjectHome />
-    <StartupFile />
+    <StartupFile>chat_server.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>

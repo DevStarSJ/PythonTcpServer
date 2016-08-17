@@ -33,7 +33,11 @@ class Peer(object):
             buf = yield from self.loop.sock_recv(self._sock, BUFFER_SIZE)
             if buf == b'':
                 break
-            self._server.broadcast('%s: %s' % (self.name, buf.decode(ENCODING)))
+
+            message = '%s: %s' % (self.name, buf.decode(ENCODING))
+
+            print(message)
+            self._server.broadcast(message)
 
 class Server(object):
     def __init__(self, loop, port):
@@ -61,7 +65,10 @@ class Server(object):
             peer_sock.setblocking(0)
             peer = Peer(self, peer_sock, peer_name)
             self._peers.append(peer)
-            self.broadcast('Peer %s connected!\n' % (peer.name,))
+
+            message = 'Peer %s connected!\n' % (peer.name,)
+            print(message)
+            self.broadcast(message)
 
 def run_server(port):
     loop = get_event_loop()
