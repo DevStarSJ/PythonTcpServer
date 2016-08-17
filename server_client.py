@@ -77,7 +77,7 @@ class Server(object):
         if len(tokens) < 2:
             return
         
-        sequence_number = bytearray(tokens[0],ENCODING)
+        sequence_number = int(tokens[0])
         event_type = tokens[1]
 
         if event_type == 'B':
@@ -100,21 +100,44 @@ class Server(object):
         if event_type == 'P':
             self.private_message(to_user_id, sequence_number)
             return
-
-
+        elif event_type == 'F':
+            self.follow(from_user_id, to_user_id, sequence_number)
+            return
         
-    def private_message(self, id, message):
-        print('print message [%s] : %s' % (str(id), message.decode(ENCODING)))
+    def private_message(self, id, sequence_number):
+        print('print message [%s] : %s' % (str(id), str(sequence_number)))
+        message = '[%s] : private message from source.' % (str(sequence_number))
+        self.send_message(id, message)
+
+    def broadcast(self, sequence_number):
+        message = '[%s] : This is broadcast message' % (str(sequence_number))
+
+        for peer in self._peers:
+            peer.send(bytearray(message, ENCODING))
+
+    def follow(self, from_id, to_id, sequence_number):
+        if not self.find_id(to_id):
+            print('[%s] : Follow failed. [%s] is not connected.' % (str(sequence_number), str(to_id)))
+            return
+
+        if from_id in self._followers.keys():
+            if not to_id in self._followers[from_id]:
+                self._followers[from_id].append(to_id)
+        else:
+            self._followers[from_id] = [ to_id ]
+
+        message = '[%s] : [%s] follows you.' % (str(sequence_number), str(to_id))
+        print(message)
+        self.send_message(to_id, message)
+        
+    def send_message(self, id, message):
         peers = [ p for p, i in self._clients.items() if i == id ]
         if len(peers) > 0:
-            peers[0].send(message)
+            peers[0].send(bytearray(message, ENCODING))
 
-    def broadcast(self, message):
-        print('in clients in broadcast')
-        print('length of peer: ',len(self._peers))
-        print(self._peers)
-        for peer in self._peers:
-            peer.send(message)
+    def find_id(self, id):
+        peers = [ p for p, i in self._clients.items() if i == id ]
+        return len(peers) > 0
 
     @coroutine
     def _server(self):
