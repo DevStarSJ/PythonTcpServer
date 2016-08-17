@@ -1,11 +1,13 @@
 from socket import socket, SO_REUSEADDR, SOL_SOCKET
 from asyncio import Task, coroutine, get_event_loop
 
+
 HOST = 'localhost'
-PORT = 9090
+PORT = 9099
 ADDR = (HOST, PORT)
 ENCODING = 'utf-8'
 BUFFER_SIZE = 1024
+
 
 class Peer(object):
     def __init__(self, server, sock, name):
@@ -16,7 +18,7 @@ class Peer(object):
         Task(self._peer_handler())
 
     def send(self, data):
-        return self.loop.sock_sendall(self._sock, data.encode(ENCODING))
+        return self.loop.sock_sendall(self._sock, data)
 
     @coroutine
     def _peer_handler(self):
@@ -37,7 +39,11 @@ class Peer(object):
             message = '%s: %s' % (self.name, buf.decode(ENCODING))
 
             print(message)
-            self._server.broadcast(message)
+            id = int(buf.decode(ENCODING))
+            print('id',id)
+            self._server._clients[self] = id
+            print(self._server._clients)
+
 
 class Server(object):
     def __init__(self, loop, port):
@@ -48,13 +54,30 @@ class Server(object):
         self._serv_sock.bind(('', port))
         self._serv_sock.listen(5)
         self._peers = []
+        self._clients = {}
+        self._followers = {}
         Task(self._server())
 
     def remove(self, peer):
         self._peers.remove(peer)
-        self.broadcast('Peer %s quit!\n' % (peer.name))
+        if peer in self._clients:
+            id = self._clients[peer]
+
+            if id in self._followers:
+                del self._followers[id]
+
+            del self._clients[peer]
+
+        print('Peer %s quit!\n' % (peer.name))
+
+    def forward(self, message):
+        print('in clients before forward')
+        self.broadcast(message)
 
     def broadcast(self, message):
+        print('in clients in broadcast')
+        print('length of peer: ',len(self._peers))
+        print(self._peers)
         for peer in self._peers:
             peer.send(message)
 
@@ -65,16 +88,16 @@ class Server(object):
             peer_sock.setblocking(0)
             peer = Peer(self, peer_sock, peer_name)
             self._peers.append(peer)
+            print('client peer : ', self._peers)
 
             message = 'Peer %s connected!\n' % (peer.name,)
             print(message)
             self.broadcast(message)
 
-def run_server(port):
-    loop = get_event_loop()
-    server = Server(loop, port)
-    loop.run_forever()
+def run_client_server(loop):
+    server = Server(loop, PORT)
 
+    print(server)
     return server
 
 if __name__ == '__main__':

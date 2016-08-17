@@ -7,12 +7,15 @@ PORT_CLIENT = 9099
 ENCODING = 'utf-8'
 
 list_process = []
+list_server = []
 
 def run_server_source():
-    run_server(PORT_SOURCE)
+    server = run_server(PORT_SOURCE)
+    list_server.append(server)
 
 def run_server_client():
-    run_server(PORT_CLIENT)
+    server = run_server(PORT_CLIENT)
+    list_server.append(server)
 
 if __name__ == "__main__":
     process1 = Process(target=run_server_source)

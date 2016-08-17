@@ -37,10 +37,11 @@ class Peer(object):
             message = '%s: %s' % (self.name, buf.decode(ENCODING))
 
             print(message)
-            self._server.broadcast(message)
+            print('in source to forward')
+            self._server._clients.forward(buf)
 
 class Server(object):
-    def __init__(self, loop, port):
+    def __init__(self, loop, port, clients):
         self.loop = loop
         self._serv_sock = socket()
         self._serv_sock.setblocking(0)
@@ -48,6 +49,7 @@ class Server(object):
         self._serv_sock.bind(('', port))
         self._serv_sock.listen(5)
         self._peers = []
+        self._clients = clients
         Task(self._server())
 
     def remove(self, peer):
@@ -70,12 +72,8 @@ class Server(object):
             print(message)
             self.broadcast(message)
 
-def run_server(port):
-    loop = get_event_loop()
-    server = Server(loop, port)
-    loop.run_forever()
+def run_source_server(loop, clients):
+    server = Server(loop, 9090, clients)
 
+    print(server)
     return server
-
-if __name__ == '__main__':
-    run_server(PORT)
