@@ -37,13 +37,8 @@ class Peer(object):
             if buf == b'':
                 break
 
-            message = '%s: %s' % (self.name, buf.decode(ENCODING))
-
-            print(message)
             id = int(buf.decode(ENCODING))
-            print('id',id)
-            self._server._clients[self] = id
-            print(self._server._clients)
+            self._server.regist(id, self)
 
 
 class Server(object):
@@ -54,22 +49,27 @@ class Server(object):
         self._serv_sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self._serv_sock.bind(('', port))
         self._serv_sock.listen(5)
-        self._peers = []
         self._clients = {}
         self._followers = {}
         Task(self._server())
 
     def remove(self, peer):
-        self._peers.remove(peer)
-        if peer in self._clients:
-            id = self._clients[peer]
+        print('[%s] quit!' % (str(self._clients[peer])))
+        del self._clients[peer]
 
-            if id in self._followers:
-                del self._followers[id]
+    def regist(self, id, peer):
+        # check id if exist in client list
+        peers = [p for p,i in self._clients.items() if i == id]
 
-            del self._clients[peer]
+        print(len(peers), peers)
 
-        print('Peer %s quit!\n' % (peer.name))
+        if len(peers) > 0:
+            peer.send(bytearray('ID exsited in connected clients. You disconnected.',ENCODING))
+            self.remove(peer)
+        else:
+            self._clients[peer] = id
+
+        print(self._clients)
 
     def forward(self, message):
 
@@ -94,7 +94,7 @@ class Server(object):
     def broadcast(self, sequence_number):
         message = '[%s] : This is broadcast message' % (str(sequence_number))
 
-        for peer in self._peers:
+        for peer in self._clients.keys():
             peer.send(bytearray(message, ENCODING))
 
     def follow(self, from_id, to_id, sequence_number):
@@ -139,7 +139,7 @@ class Server(object):
 
     def send_message(self, id, message):
         peers = [ p for p, i in self._clients.items() if i == id ]
-        if len(peers) > 0 and peers[0] in self._peers:
+        if len(peers) > 0:
             peers[0].send(bytearray(message, ENCODING))
 
     def find_id(self, id):
@@ -152,13 +152,8 @@ class Server(object):
             peer_sock, peer_name = yield from self.loop.sock_accept(self._serv_sock)
             peer_sock.setblocking(0)
             peer = Peer(self, peer_sock, peer_name)
-            self._peers.append(peer)
-            print('client peer : ', self._peers)
-
-            message = 'Peer %s connected!\n' % (peer.name,)
-            print(message)
-            self.broadcast(message)
-
+            #self._peers.append(peer)
+            print('Peer Connected : ', peer)
 
 def run_client_server(loop):
     server = Server(loop, PORT)
