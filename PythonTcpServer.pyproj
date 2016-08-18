@@ -50,6 +50,9 @@
     <Compile Include="peer.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="server.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="server_client.py">
       <SubType>Code</SubType>
     </Compile>
