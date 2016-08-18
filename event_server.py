@@ -31,6 +31,9 @@ class EventServer(Server):
     def get_peer(self, peer_sock, peer_name):
         return EventPeer(self, peer_sock, peer_name)
 
+    def on_connected(self, peer):
+        self._logger.connect_log(peer)
+
 
 def run_event_server(loop, client_server, logger):
     server = EventServer(loop, PORT, client_server, logger)

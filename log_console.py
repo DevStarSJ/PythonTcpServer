@@ -63,5 +63,8 @@ class ConsoleEventLogger(object):
             else message.decode(ENCODING)
         print('[Event][{0}][{1}] : {2}'.format(now(), peer.name, string_message))
 
+    def connect_log(self, peer):
+        print('[Event][{0}][{1}] : connected.'.format(now(), peer.name))
+
     def quit_log(self, peer):
         print('[Event][{0}][{1}] : quit.'.format(now(), peer.name))
