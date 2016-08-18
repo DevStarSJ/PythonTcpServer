@@ -40,7 +40,7 @@ class Peer(object):
 
             print(message)
             print('in source to forward')
-            self._server._clients.forward(buf)
+            self._server._clients.process(buf)
 
 
 class Server(object):

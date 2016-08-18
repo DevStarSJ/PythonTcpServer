@@ -1,5 +1,12 @@
 ENCODING = 'utf-8'
 
+class Event(object):
+    def __init__(self, sequence_number, event_type, from_id, to_id):
+        self.sequence_number = sequence_number
+        self.event_type = event_type
+        self.from_id = from_id
+        self.to_id = to_id
+
 def translate_protocol(bytes):
     tokens = bytes.decode(ENCODING).split('|')
 
@@ -18,4 +25,4 @@ def translate_protocol(bytes):
     if len(tokens) > 3:
         to_id = int(tokens[3])
 
-    return sequence_number, event_type, from_id, to_id
+    return Event(sequence_number, event_type, from_id, to_id)

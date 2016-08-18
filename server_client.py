@@ -1,6 +1,7 @@
 from socket import socket, SO_REUSEADDR, SOL_SOCKET
 from asyncio import Task, coroutine, get_event_loop
 from event_manager import translate_protocol
+from log_console import get_message
 
 
 HOST = 'localhost'
@@ -16,7 +17,6 @@ class Peer(object):
         self.name = name
         self._sock = sock
         self._server = server
-        #self.id = 0
         Task(self._peer_handler())
 
     def send(self, data):
@@ -39,12 +39,11 @@ class Peer(object):
                 break
 
             self.id = int(buf.decode(ENCODING))
-            print('Receive ID from Client : ', self.id)
             self._server.regist(self)
 
 
 class Server(object):
-    def __init__(self, loop, port):
+    def __init__(self, loop, port, logger):
         self.loop = loop
         self._serv_sock = socket()
         self._serv_sock.setblocking(0)
@@ -53,13 +52,15 @@ class Server(object):
         self._serv_sock.listen(5)
         self._clients = {}
         self._followers = {}
+        self._logger = logger
         Task(self._server())
 
     def remove(self, peer):
-        print('[%s] quit!' % (str(peer.id)))
+        self._logger.quit_log(peer.id)
         del self._clients[peer.id]
 
     def regist(self, peer):
+        self._logger.regist_log(peer)
 
         # check id if exist in client list
         if peer.id in self._clients.keys():
@@ -70,63 +71,50 @@ class Server(object):
 
         print(self._clients)
 
-    def forward(self, message):
+    def process(self, message):
+        event = translate_protocol(message)
+        self._logger.log(event)
 
-        sequence_number, event_type, from_user_id, to_user_id = translate_protocol(message)
-
-        if event_type == 'B':
-            self.broadcast(sequence_number)
-        elif event_type == 'S':
-            self.update_profile(from_user_id, sequence_number)
-        elif event_type == 'P':
-            self.private_message(from_user_id, to_user_id, sequence_number)
-        elif event_type == 'F':
-            self.follow(from_user_id, to_user_id, sequence_number)
-        elif event_type == 'U':
-            self.unfollow(from_user_id, to_user_id, sequence_number)
+        if event.event_type == 'B':
+            self.broadcast(event)
+        elif event.event_type == 'S':
+            self.update_profile(event)
+        elif event.event_type == 'P':
+            self.private_message(event)
+        elif event.event_type == 'F':
+            self.follow(event)
+        elif event.event_type == 'U':
+            self.unfollow(event)
         
-    def private_message(self, from_id, to_id, sequence_number):
-        print('[%s] : print message from [%s] to [%s]' % (str(sequence_number), str(from_id), str(to_id)))
-        message = '[%s] : private message from [%s].' % (str(sequence_number), str(from_id))
-        self.send_message(to_id, message)
+    def private_message(self, event):
+        message = get_message(event)
+        self.send_message(event.to_id, message)
 
-    def broadcast(self, sequence_number):
-        message = '[%s] : This is broadcast message' % (str(sequence_number))
+    def broadcast(self, event):
+        message = get_message(event)
 
         for peer in self._clients.values():
             peer.send(bytearray(message, ENCODING))
 
-    def follow(self, from_id, to_id, sequence_number):
-
-        if to_id in self._followers.keys():
-            if not from_id in self._followers[to_id]:
-                self._followers[to_id].append(from_id)
+    def follow(self, event):
+        if event.to_id in self._followers.keys():
+            if not event.from_id in self._followers[event.to_id]:
+                self._followers[event.to_id].append(event.from_id)
         else:
-            self._followers[to_id] = [ from_id ]
+            self._followers[event.to_id] = [ event.from_id ]
 
-        message = '[%s] : [%s] follows you.' % (str(sequence_number), str(from_id))
-        print(message)
-        self.send_message(to_id, message)
+        message = get_message(event)
+        self.send_message(event.to_id, message)
 
-        print(self._followers)
+    def unfollow(self, event):
+        if event.to_id in self._followers.keys():
+            if event.from_id in self._followers[event.to_id]:
+                self._followers[event.to_id].remove(event.from_id)
 
-    def unfollow(self, from_id, to_id, sequence_number):
-
-        #ignore if user is on connection status
-
-        message = '[%s] : [%s] unfollows [%s].' % (str(sequence_number), str(from_id), str(to_id))
-        print(message)
-
-        if to_id in self._followers.keys():
-            if from_id in self._followers[to_id]:
-                self._followers[to_id].remove(from_id)
-
-        print(self._followers)
-
-    def update_profile(self, from_id, sequence_number):
-        if from_id in self._followers.keys():
-            message = '[%s] : [%s] profile updated.' % (str(sequence_number), str(from_id))
-            for to_id in self._followers[from_id]:
+    def update_profile(self, event):
+        if event.from_id in self._followers.keys():
+            message = get_message(event)
+            for to_id in self._followers[event.from_id]:
                 self.send_message(to_id, message)
 
     def send_message(self, id, message):
@@ -139,14 +127,9 @@ class Server(object):
             peer_sock, peer_name = yield from self.loop.sock_accept(self._serv_sock)
             peer_sock.setblocking(0)
             peer = Peer(self, peer_sock, peer_name)
-            #self._peers.append(peer)
-            print('Peer Connected : ', peer)
+            self._logger.connect_log(peer)
 
-def run_client_server(loop):
-    server = Server(loop, PORT)
-
+def run_client_server(loop, logger):
+    server = Server(loop, PORT, logger)
     print(server)
     return server
-
-if __name__ == '__main__':
-    run_server(PORT)

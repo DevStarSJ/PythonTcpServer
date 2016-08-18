@@ -41,6 +41,9 @@
     <Compile Include="event_manager.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="log_console.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="main_server.py">
       <SubType>Code</SubType>
     </Compile>
