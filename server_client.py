@@ -1,5 +1,6 @@
 from socket import socket, SO_REUSEADDR, SOL_SOCKET
 from asyncio import Task, coroutine, get_event_loop
+from event_manager import translate_protocol
 
 
 HOST = 'localhost'
@@ -71,42 +72,19 @@ class Server(object):
         print('Peer %s quit!\n' % (peer.name))
 
     def forward(self, message):
-        print('in clients before forward : ', message)
-        tokens = message.decode(ENCODING).split('|')
 
-        if len(tokens) < 2:
-            return
-        
-        sequence_number = int(tokens[0])
-        event_type = tokens[1]
+        sequence_number, event_type, from_user_id, to_user_id = translate_protocol(message)
 
         if event_type == 'B':
             self.broadcast(sequence_number)
-            return
-
-        if len(tokens) < 3:
-            return
-
-        from_user_id = int(tokens[2])
-
-        if event_type == 'S':
+        elif event_type == 'S':
             self.update_profile(from_user_id, sequence_number)
-            return
-        
-        if len(tokens) < 4:
-            return
-
-        to_user_id = int(tokens[3])
-
-        if event_type == 'P':
+        elif event_type == 'P':
             self.private_message(from_user_id, to_user_id, sequence_number)
-            return
         elif event_type == 'F':
             self.follow(from_user_id, to_user_id, sequence_number)
-            return
         elif event_type == 'U':
             self.unfollow(from_user_id, to_user_id, sequence_number)
-            return
         
     def private_message(self, from_id, to_id, sequence_number):
         print('[%s] : print message from [%s] to [%s]' % (str(sequence_number), str(from_id), str(to_id)))
@@ -128,11 +106,11 @@ class Server(object):
             return
         '''
 
-        if from_id in self._followers.keys():
-            if not to_id in self._followers[from_id]:
-                self._followers[from_id].append(to_id)
+        if to_id in self._followers.keys():
+            if not from_id in self._followers[to_id]:
+                self._followers[to_id].append(from_id)
         else:
-            self._followers[from_id] = [ to_id ]
+            self._followers[to_id] = [ from_id ]
 
         message = '[%s] : [%s] follows you.' % (str(sequence_number), str(from_id))
         print(message)
@@ -147,9 +125,9 @@ class Server(object):
         message = '[%s] : [%s] unfollows [%s].' % (str(sequence_number), str(from_id), str(to_id))
         print(message)
 
-        if from_id in self._followers.keys():
-            if to_id in self._followers[from_id]:
-                self._followers[from_id].remove(to_id)
+        if to_id in self._followers.keys():
+            if from_id in self._followers[to_id]:
+                self._followers[to_id].remove(from_id)
 
         print(self._followers)
 

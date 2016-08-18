@@ -38,6 +38,9 @@
     <Compile Include="backup\tcp_echo_async_server.py" />
     <Compile Include="backup\tcp_server.py" />
     <Compile Include="backup\tcp_source.py" />
+    <Compile Include="event_manager.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="main_server.py">
       <SubType>Code</SubType>
     </Compile>
