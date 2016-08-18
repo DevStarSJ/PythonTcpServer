@@ -90,7 +90,8 @@ class Server(object):
         from_user_id = int(tokens[2])
 
         if event_type == 'S':
-            pass # 아직 구현전
+            self.update_profile(from_user_id, sequence_number)
+            return
         
         if len(tokens) < 4:
             return
@@ -98,16 +99,19 @@ class Server(object):
         to_user_id = int(tokens[3])
 
         if event_type == 'P':
-            self.private_message(to_user_id, sequence_number)
+            self.private_message(from_user_id, to_user_id, sequence_number)
             return
         elif event_type == 'F':
             self.follow(from_user_id, to_user_id, sequence_number)
             return
+        elif event_type == 'U':
+            self.unfollow(from_user_id, to_user_id, sequence_number)
+            return
         
-    def private_message(self, id, sequence_number):
-        print('print message [%s] : %s' % (str(id), str(sequence_number)))
-        message = '[%s] : private message from source.' % (str(sequence_number))
-        self.send_message(id, message)
+    def private_message(self, from_id, to_id, sequence_number):
+        print('[%s] : print message from [%s] to [%s]' % (str(sequence_number), str(from_id), str(to_id)))
+        message = '[%s] : private message from [%s].' % (str(sequence_number), str(from_id))
+        self.send_message(to_id, message)
 
     def broadcast(self, sequence_number):
         message = '[%s] : This is broadcast message' % (str(sequence_number))
@@ -116,9 +120,13 @@ class Server(object):
             peer.send(bytearray(message, ENCODING))
 
     def follow(self, from_id, to_id, sequence_number):
+
+        #ignore if user is on connection status
+        '''
         if not self.find_id(to_id):
             print('[%s] : Follow failed. [%s] is not connected.' % (str(sequence_number), str(to_id)))
             return
+        '''
 
         if from_id in self._followers.keys():
             if not to_id in self._followers[from_id]:
@@ -126,13 +134,34 @@ class Server(object):
         else:
             self._followers[from_id] = [ to_id ]
 
-        message = '[%s] : [%s] follows you.' % (str(sequence_number), str(to_id))
+        message = '[%s] : [%s] follows you.' % (str(sequence_number), str(from_id))
         print(message)
         self.send_message(to_id, message)
-        
+
+        print(self._followers)
+
+    def unfollow(self, from_id, to_id, sequence_number):
+
+        #ignore if user is on connection status
+
+        message = '[%s] : [%s] unfollows [%s].' % (str(sequence_number), str(from_id), str(to_id))
+        print(message)
+
+        if from_id in self._followers.keys():
+            if to_id in self._followers[from_id]:
+                self._followers[from_id].remove(to_id)
+
+        print(self._followers)
+
+    def update_profile(self, from_id, sequence_number):
+        if from_id in self._followers.keys():
+            message = '[%s] : [%s] profile updated.' % (str(sequence_number), str(from_id))
+            for to_id in self._followers[from_id]:
+                self.send_message(to_id, message)
+
     def send_message(self, id, message):
         peers = [ p for p, i in self._clients.items() if i == id ]
-        if len(peers) > 0:
+        if len(peers) > 0 and peers[0] in self._peers:
             peers[0].send(bytearray(message, ENCODING))
 
     def find_id(self, id):
