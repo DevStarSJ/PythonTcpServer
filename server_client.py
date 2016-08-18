@@ -1,8 +1,7 @@
-from socket import socket, SO_REUSEADDR, SOL_SOCKET
-from asyncio import Task, coroutine, get_event_loop
 from event_manager import translate_protocol
 from log_console import get_message
 from peer import Peer
+from server import Server
 
 
 HOST = 'localhost'
@@ -18,18 +17,12 @@ class ClientPeer(Peer):
         self._server.regist(self)
 
 
-class Server(object):
+class ClientServer(Server):
     def __init__(self, loop, port, logger):
-        self.loop = loop
-        self._serv_sock = socket()
-        self._serv_sock.setblocking(0)
-        self._serv_sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        self._serv_sock.bind(('', port))
-        self._serv_sock.listen(5)
         self._clients = {}
         self._followers = {}
         self._logger = logger
-        Task(self._server())
+        super().__init__(loop, port)
 
     def remove(self, peer):
         self._logger.quit_log(peer.id)
@@ -44,8 +37,6 @@ class Server(object):
             self.remove(peer)
         else:
             self._clients[peer.id] = peer
-
-        print(self._clients)
 
     def process(self, message):
         event = translate_protocol(message)
@@ -97,15 +88,13 @@ class Server(object):
         if id in self._clients.keys():
             self._clients[id].send(bytearray(message, ENCODING))
 
-    @coroutine
-    def _server(self):
-        while True:
-            peer_sock, peer_name = yield from self.loop.sock_accept(self._serv_sock)
-            peer_sock.setblocking(0)
-            peer = ClientPeer(self, peer_sock, peer_name)
-            self._logger.connect_log(peer)
+    def get_peer(self, peer_sock, peer_name):
+        return ClientPeer(self, peer_sock, peer_name)
+
+    def on_connected(self, peer):
+        self._logger.connect_log(peer)
 
 def run_client_server(loop, logger):
-    server = Server(loop, PORT, logger)
+    server = ClientServer(loop, PORT, logger)
     print(server)
     return server

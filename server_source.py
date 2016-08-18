@@ -1,5 +1,3 @@
-from socket import socket, SO_REUSEADDR, SOL_SOCKET
-from asyncio import Task, coroutine, get_event_loop
 from peer import Peer
 from server import Server
 
