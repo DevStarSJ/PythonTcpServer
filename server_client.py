@@ -2,6 +2,7 @@ from socket import socket, SO_REUSEADDR, SOL_SOCKET
 from asyncio import Task, coroutine, get_event_loop
 from event_manager import translate_protocol
 from log_console import get_message
+from peer import Peer
 
 
 HOST = 'localhost'
@@ -11,35 +12,10 @@ ENCODING = 'utf-8'
 BUFFER_SIZE = 1024
 
 
-class Peer(object):
-    def __init__(self, server, sock, name):
-        self.loop = server.loop
-        self.name = name
-        self._sock = sock
-        self._server = server
-        Task(self._peer_handler())
-
-    def send(self, data):
-        return self.loop.sock_sendall(self._sock, data)
-
-    @coroutine
-    def _peer_handler(self):
-        try:
-            yield from self._peer_loop()
-        except IOError:
-            pass
-        finally:
-            self._server.remove(self)
-
-    @coroutine
-    def _peer_loop(self):
-        while True:
-            buf = yield from self.loop.sock_recv(self._sock, BUFFER_SIZE)
-            if buf == b'':
-                break
-
-            self.id = int(buf.decode(ENCODING))
-            self._server.regist(self)
+class ClientPeer(Peer):
+    def on_received(self, bytes):
+        self.id = int(bytes.decode(ENCODING))
+        self._server.regist(self)
 
 
 class Server(object):
@@ -126,7 +102,7 @@ class Server(object):
         while True:
             peer_sock, peer_name = yield from self.loop.sock_accept(self._serv_sock)
             peer_sock.setblocking(0)
-            peer = Peer(self, peer_sock, peer_name)
+            peer = ClientPeer(self, peer_sock, peer_name)
             self._logger.connect_log(peer)
 
 def run_client_server(loop, logger):
