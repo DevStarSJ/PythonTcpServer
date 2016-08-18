@@ -23,6 +23,7 @@ class ClientServer(Server):
         self._followers = {}
         self._logger = logger
         super().__init__(loop, port)
+        self.listen(1000)
 
     def remove(self, peer):
         self._logger.quit_log(peer.id)

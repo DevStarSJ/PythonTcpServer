@@ -19,6 +19,7 @@ class EventServer(Server):
         self._client_server = client_server
         self._logger = logger
         super().__init__(loop, port)
+        self.listen(5)
 
     def remove(self, peer):
         self._logger.quit_log(peer)

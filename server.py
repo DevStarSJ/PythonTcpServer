@@ -9,8 +9,10 @@ class Server(object):
         self._serv_sock.setblocking(0)
         self._serv_sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self._serv_sock.bind(('', port))
-        self._serv_sock.listen(5)
         self._peers = []
+
+    def listen(self, num_listen):
+        self._serv_sock.listen(num_listen)
         Task(self._server())
 
     def remove(self, peer):
