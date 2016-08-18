@@ -16,6 +16,7 @@ class Peer(object):
         self.name = name
         self._sock = sock
         self._server = server
+        #self.id = 0
         Task(self._peer_handler())
 
     def send(self, data):
@@ -37,8 +38,9 @@ class Peer(object):
             if buf == b'':
                 break
 
-            id = int(buf.decode(ENCODING))
-            self._server.regist(id, self)
+            self.id = int(buf.decode(ENCODING))
+            print('Receive ID from Client : ', self.id)
+            self._server.regist(self)
 
 
 class Server(object):
@@ -54,20 +56,17 @@ class Server(object):
         Task(self._server())
 
     def remove(self, peer):
-        print('[%s] quit!' % (str(self._clients[peer])))
-        del self._clients[peer]
+        print('[%s] quit!' % (str(peer.id)))
+        del self._clients[peer.id]
 
-    def regist(self, id, peer):
+    def regist(self, peer):
+
         # check id if exist in client list
-        peers = [p for p,i in self._clients.items() if i == id]
-
-        print(len(peers), peers)
-
-        if len(peers) > 0:
+        if peer.id in self._clients.keys():
             peer.send(bytearray('ID exsited in connected clients. You disconnected.',ENCODING))
             self.remove(peer)
         else:
-            self._clients[peer] = id
+            self._clients[peer.id] = peer
 
         print(self._clients)
 
@@ -94,17 +93,10 @@ class Server(object):
     def broadcast(self, sequence_number):
         message = '[%s] : This is broadcast message' % (str(sequence_number))
 
-        for peer in self._clients.keys():
+        for peer in self._clients.values():
             peer.send(bytearray(message, ENCODING))
 
     def follow(self, from_id, to_id, sequence_number):
-
-        #ignore if user is on connection status
-        '''
-        if not self.find_id(to_id):
-            print('[%s] : Follow failed. [%s] is not connected.' % (str(sequence_number), str(to_id)))
-            return
-        '''
 
         if to_id in self._followers.keys():
             if not from_id in self._followers[to_id]:
@@ -138,13 +130,8 @@ class Server(object):
                 self.send_message(to_id, message)
 
     def send_message(self, id, message):
-        peers = [ p for p, i in self._clients.items() if i == id ]
-        if len(peers) > 0:
-            peers[0].send(bytearray(message, ENCODING))
-
-    def find_id(self, id):
-        peers = [ p for p, i in self._clients.items() if i == id ]
-        return len(peers) > 0
+        if id in self._clients.keys():
+            self._clients[id].send(bytearray(message, ENCODING))
 
     @coroutine
     def _server(self):
