@@ -1,5 +1,9 @@
 from datetime import datetime
 
+
+ENCODING = 'utf-8'
+
+
 def now():
     return str(datetime.now())
 
@@ -29,18 +33,35 @@ def get_log_message(event):
 
     return None
 
-class ConsoleLogger(object):
+
+class ConsoleClientLogger(object):
     def __init__(self):
         pass
 
     def log(self, event):
-        print(get_log_message(event))
+        message = get_log_message(event)
+        if not message == None:
+            print(message)
 
     def quit_log(self, id):
         print('[{0}] : [{1}] quit.'.format(now(), id))
 
     def connect_log(self, peer):
-        print('[{0}] : [{1}] connected'.format(now(), peer.name))
+        print('[{0}] : [{1}] connected.'.format(now(), peer.name))
 
     def regist_log(self, peer):
         print('[{0}] : [{1}] regist ID [{2}]'.format(now(), peer.name, peer.id))
+
+
+class ConsoleEventLogger(object):
+    def __init__(self):
+        pass
+
+    def event_message_log(self, peer, message):
+        string_message = message \
+            if type(message) == str \
+            else message.decode(ENCODING)
+        print('[Event][{0}][{1}] : {2}'.format(now(), peer.name, string_message))
+
+    def quit_log(self, peer):
+        print('[Event][{0}][{1}] : quit.'.format(now(), peer.name))

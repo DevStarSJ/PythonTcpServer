@@ -15,14 +15,16 @@ def translate_protocol(bytes):
     from_id = None
     to_id = None
 
-    if len(tokens) > 1:
+    token_count = len(tokens)
+
+    if token_count > 1:
         sequence_number = int(tokens[0])
         event_type = tokens[1]
 
-    if len(tokens) > 2:
+    if token_count > 2:
         from_id = int(tokens[2])
 
-    if len(tokens) > 3:
+    if token_count > 3:
         to_id = int(tokens[3])
 
     return Event(sequence_number, event_type, from_id, to_id)

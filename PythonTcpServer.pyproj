@@ -53,10 +53,10 @@
     <Compile Include="server.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="server_client.py">
+    <Compile Include="client_server.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="server_source.py">
+    <Compile Include="event_server.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

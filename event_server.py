@@ -15,24 +15,24 @@ class EventPeer(Peer):
 
 
 class EventServer(Server):
-    def __init__(self, loop, port, clients):
-        self._clients = clients
+    def __init__(self, loop, port, client_server, logger):
+        self._client_server = client_server
+        self._logger = logger
         super().__init__(loop, port)
 
     def remove(self, peer):
-        print('EventPeer [{0}] quit.'.format(peer.name))
+        self._logger.quit_log(peer)
         super().remove(peer)
 
     def process(self, peer, message):
-        print('%s: %s' % (peer.name, message.decode(ENCODING)))
-        self._clients.process(message)
+        self._logger.event_message_log(peer, message)
+        self._client_server.process(message)
 
     def get_peer(self, peer_sock, peer_name):
         return EventPeer(self, peer_sock, peer_name)
 
 
-def run_source_server(loop, clients):
-    server = EventServer(loop, 9090, clients)
-
+def run_event_server(loop, client_server, logger):
+    server = EventServer(loop, PORT, client_server, logger)
     print(server)
     return server
