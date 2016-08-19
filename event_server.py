@@ -1,16 +1,17 @@
 from peer import Peer
 from server import Server
+from appsettings import get_appsettings
 
+appsettings = get_appsettings()
 
-HOST = 'localhost'
-PORT = 9090
-ADDR = (HOST, PORT)
+PORT = appsettings["eventListenerPort"]
+LOG_DEBUG = appsettings["logLevel"] == "debug"
 ENCODING = 'utf-8'
-BUFFER_SIZE = 1024
-
 
 class EventPeer(Peer):
     def on_received(self, bytes):
+        if LOG_DEBUG:
+            print(self.name, bytes.decode(ENCODING))
         self._server.process(self, bytes)
 
 
@@ -34,6 +35,7 @@ class EventServer(Server):
 
     def on_connected(self, peer):
         self._logger.connect_log(peer)
+        self._peers.append(peer)
 
 
 def run_event_server(loop, client_server, logger):

@@ -2,13 +2,13 @@ from event_manager import translate_protocol
 from log_console import get_message
 from peer import Peer
 from server import Server
+from appsettings import get_appsettings
 
+appsettings = get_appsettings()
 
-HOST = 'localhost'
-PORT = 9099
-ADDR = (HOST, PORT)
+PORT = appsettings["clientListenerPort"]
 ENCODING = 'utf-8'
-BUFFER_SIZE = 1024
+LISTEN_NUMBER = appsettings["concurrencyLevel"]
 
 
 class ClientPeer(Peer):
@@ -23,7 +23,7 @@ class ClientServer(Server):
         self._followers = {}
         self._logger = logger
         super().__init__(loop, port)
-        self.listen(1000)
+        self.listen(LISTEN_NUMBER)
 
     def remove(self, peer):
         self._logger.quit_log(peer.id)

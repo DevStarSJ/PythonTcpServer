@@ -1,6 +1,11 @@
 from socket import socket, SO_REUSEADDR, SOL_SOCKET
 from asyncio import Task, coroutine
 from peer import Peer
+from appsettings import get_appsettings
+
+appsettings = get_appsettings()
+
+TIMEOUT = appsettings["timeout"] / 1000
 
 class Server(object):
     def __init__(self, loop, port):
@@ -9,6 +14,8 @@ class Server(object):
         self._serv_sock.setblocking(0)
         self._serv_sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self._serv_sock.bind(('', port))
+        ##linux only
+        #self._serv_sock.setdefaulttimeout(TIMEOUT)
         self._peers = []
 
     def listen(self, num_listen):

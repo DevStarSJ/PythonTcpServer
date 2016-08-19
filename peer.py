@@ -1,6 +1,5 @@
 from asyncio import Task, coroutine
 
-
 ENCODING = 'utf-8'
 BUFFER_SIZE = 1024
 
