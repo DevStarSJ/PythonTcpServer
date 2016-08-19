@@ -10,6 +10,7 @@ PORT = appsettings["clientListenerPort"]
 ENCODING = 'utf-8'
 LISTEN_NUMBER = appsettings["concurrencyLevel"]
 QUEUE_SIZE = appsettings["maxEventSourceBatchSize"]
+LOG_DEBUG = appsettings["logLevel"] == "debug"
 
 
 class ClientPeer(Peer):
@@ -122,5 +123,8 @@ class ClientServer(Server):
 
 def run_client_server(loop, logger):
     server = ClientServer(loop, PORT, logger)
-    print(server)
+
+    if LOG_DEBUG:
+        print(server)
+
     return server

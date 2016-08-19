@@ -21,26 +21,10 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="01.chat_server\chat_client.py" />
-    <Compile Include="01.chat_server\chat_server.py" />
-    <Compile Include="02.double_chat_server\chat_client.py" />
-    <Compile Include="02.double_chat_server\chat_server.py" />
-    <Compile Include="02.double_chat_server\double_chat_server.py" />
     <Compile Include="appsettings.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="backup\audience_server.py" />
-    <Compile Include="backup\audience_tcp_handler.py" />
     <Compile Include="chat_client.py" />
-    <Compile Include="backup\multiprocessing_server.py" />
-    <Compile Include="backup\tcp_async_server.py" />
-    <Compile Include="backup\tcp_async_server_not_working_style2.py" />
-    <Compile Include="backup\tcp_chat_client.py" />
-    <Compile Include="backup\tcp_client.py" />
-    <Compile Include="backup\tcp_client_audience.py" />
-    <Compile Include="backup\tcp_echo_async_server.py" />
-    <Compile Include="backup\tcp_server.py" />
-    <Compile Include="backup\tcp_source.py" />
     <Compile Include="event_manager.py">
       <SubType>Code</SubType>
     </Compile>
@@ -62,11 +46,6 @@
     <Compile Include="event_server.py">
       <SubType>Code</SubType>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="01.chat_server\" />
-    <Folder Include="02.double_chat_server\" />
-    <Folder Include="backup\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="appsettings.json" />

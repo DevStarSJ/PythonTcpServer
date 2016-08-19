@@ -40,5 +40,8 @@ class EventServer(Server):
 
 def run_event_server(loop, client_server, logger):
     server = EventServer(loop, PORT, client_server, logger)
-    print(server)
+
+    if LOG_DEBUG:
+        print(server)
+
     return server
