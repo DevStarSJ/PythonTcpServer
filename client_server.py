@@ -46,6 +46,9 @@ class ClientServer(Server):
     def process(self, message):
         event = translate_protocol(message)
 
+        if event.event_type == None:
+            return
+
         if event.sequence_number == self._current_message_index:
             self.do_event(event)
 
