@@ -1,4 +1,9 @@
+from appsettings import get_appsettings
+
+appsettings = get_appsettings()
+
 ENCODING = 'utf-8'
+LOG_DEBUG = appsettings["logLevel"] == "debug"
 
 class Event(object):
     def __init__(self, sequence_number, event_type, from_id, to_id):
@@ -8,7 +13,11 @@ class Event(object):
         self.to_id = to_id
 
 def translate_protocol(bytes):
+
     tokens = bytes.decode(ENCODING).split('|')
+
+    if LOG_DEBUG:
+        print('Event Received : ',tokens)
 
     sequence_number = None
     event_type = None

@@ -9,6 +9,7 @@ appsettings = get_appsettings()
 PORT = appsettings["clientListenerPort"]
 ENCODING = 'utf-8'
 LISTEN_NUMBER = appsettings["concurrencyLevel"]
+QUEUE_SIZE = appsettings["maxEventSourceBatchSize"]
 
 
 class ClientPeer(Peer):
@@ -22,6 +23,8 @@ class ClientServer(Server):
         self._clients = {}
         self._followers = {}
         self._logger = logger
+        self._message_queue = []
+        self._current_message_index = 1
         super().__init__(loop, port)
         self.listen(LISTEN_NUMBER)
 
@@ -41,6 +44,26 @@ class ClientServer(Server):
 
     def process(self, message):
         event = translate_protocol(message)
+
+        if event.sequence_number == self._current_message_index:
+            self.do_event(event)
+
+            while len(self._message_queue) != 0 \
+                and self._message_queue[0].sequence_number == self._current_message_index:
+                popped_event = self._message_queue[0]
+                self._message_queue.remove(popped_event)
+                self.do_event(popped_event)
+
+        else:
+            if len(self._message_queue) >= QUEUE_SIZE:
+                # Python don't and do not need limit of list
+                # if another work is needed, do it here
+                pass
+
+            self._message_queue.append(event)
+            self._message_queue.sort(key = lambda e : e.sequence_number)
+
+    def do_event(self, event):
         self._logger.log(event)
 
         if event.event_type == 'B':
@@ -53,7 +76,9 @@ class ClientServer(Server):
             self.follow(event)
         elif event.event_type == 'U':
             self.unfollow(event)
-        
+
+        self._current_message_index += 1
+
     def private_message(self, event):
         message = get_message(event)
         self.send_message(event.to_id, message)
